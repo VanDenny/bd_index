@@ -3,7 +3,8 @@ from selenium import webdriver
 import urllib
 import pandas as pd
 import os
-from selenium.webdriver.common.action_chains import ActionChains
+import pyautogui as pag
+from selenium.webdriver import ActionChains
 from PIL import Image
 import pytesseract
 
@@ -91,9 +92,14 @@ class Bdindex_clawer:
             self.driver.find_element_by_xpath(sel).click()
             self.driver.find_element_by_id('trend-meanline').click()
             time.sleep(2)
-            rects = self.driver.find_elements_by_xpath("//rect[@fill='#3ec7f5']")
-            print(rects)
-            rects[0].click()
+            js = 'window.scrollTo(0,100);'
+            self.driver.execute_script(js)
+            time.sleep(1)
+            pag.moveTo(700, 800, 0.5)
+            pag.click()
+            # rect = self.driver.find_element_by_xpath("//*[name()='svg']/*[name()='rect'][3]")
+            # ActionChains(self.driver).move_to_element(rect).click().perform()
+            time.sleep(3)
             self.driver.save_screenshot('pic/%s_%s_%s.png' % (key_word, city, period))
         else:
             Bdindex_clawer.cookie_valid = False
