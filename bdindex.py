@@ -63,7 +63,7 @@ class Bdindex_clawer:
 
 
 
-    def get_index(self, province, city, period):
+    def get_index(self, province, city, key_word, period):
         if self.cookie_valid:
             if os.path.exists('cookie.xlsx'):
                 self.cookie_list = pd.read_excel('cookie.xlsx').to_dict(orient='records')
@@ -71,15 +71,16 @@ class Bdindex_clawer:
                 self.driver.delete_all_cookies()
                 for cookie in self.cookie_list:
                     if cookie['name'] in ['BDUSS', 'BAIDUID']:
-                        self.driver.add_cookie(cookie)
+                        print(cookie)
+                        self.driver.add_cookie({'name': cookie['name'], 'value': cookie['value']})
             else:
                 print('找不到cookie')
                 Bdindex_clawer.cookie_valid = False
         else:
             self.login()
             Bdindex_clawer.cookie_valid = True
-        key_word = urllib.parse.quote(city, encoding='GBK')
-        url = 'http://index.baidu.com/?tpl=trend&type=0&area=%s&time=13&word=%s%s' % (self.city_code[city], key_word, self.province_code[province])
+        new_key_word = urllib.parse.quote(key_word, encoding='GBK')
+        url = 'http://index.baidu.com/?tpl=trend&type=0&area=%s&time=13&word=%s%s' % (self.city_code[city], new_key_word, self.province_code[province])
         print(url)
         self.driver.get(url)
         current_url = self.driver.current_url
@@ -89,9 +90,20 @@ class Bdindex_clawer:
             sel = '//a[@rel="%s"]' % period
             self.driver.find_element_by_xpath(sel).click()
             self.driver.find_element_by_id('trend-meanline').click()
+            time.sleep(2)
+            rects = self.driver.find_elements_by_xpath("//rect[@fill='#3ec7f5']")
+            print(rects)
+            rects[0].click()
+            self.driver.save_screenshot('pic/%s_%s_%s.png' % (key_word, city, period))
         else:
             Bdindex_clawer.cookie_valid = False
-            self.get_index(province, city, period)
+            self.get_index(province, city, key_word, period)
+
+    def process(self):
+        city_name = [i for i in self.city_code.keys()]
+        for ord, key_word in enumerate(city_name):
+            for city in city_name[ord+1:]:
+                self.get_index('山东', city, key_word, 'all')
 
 
 
@@ -103,4 +115,4 @@ class Bdindex_clawer:
 
 if __name__ == "__main__":
     bd_clawer = Bdindex_clawer()
-    bd_clawer.get_index('山东', '威海', 'all')
+    bd_clawer.process()
