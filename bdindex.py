@@ -34,6 +34,15 @@ class Bdindex_clawer:
         "滨州": "76", "莱芜": "356", "枣庄": "85",
         "菏泽": "84", "日照": "366"
     }
+    gd_code ={
+        "广州": "95", "深圳": "94", "佛山": "196",
+        "惠州": "199", "汕头": "212", "东莞": "133",
+        "茂名": "203", "江门": "198", "珠海": "200",
+        "湛江": "197", "肇庆": "209", "揭阳": "205",
+        "中山": "207", "韶关": "201", "阳江": "202",
+        "云浮": "195", "梅州": "211", "清远": "208",
+        "潮州": "204", "汕尾": "213", "河源": "210"
+    }
     cookie_valid = True
     def __init__(self):
         self.driver = webdriver.Chrome()
@@ -47,6 +56,10 @@ class Bdindex_clawer:
         name_element = self.driver.find_element_by_id("TANGRAM__PSP_3__userName")
         passport_element = self.driver.find_element_by_id("TANGRAM__PSP_3__password")
         submit_element = self.driver.find_element_by_id("TANGRAM__PSP_3__submit")
+        # name_element.send_keys('18702088767')
+        # passport_element.send_keys('18702088767')
+        # name_element.send_keys('18620807798')
+        # passport_element.send_keys('denglifan1989')
         name_element.send_keys('575548935@qq.com')
         passport_element.send_keys('baidu@890529')
         submit_element.click()
@@ -89,7 +102,7 @@ class Bdindex_clawer:
         denny_pic = self.driver.find_elements_by_xpath('//img[@src="/static/imgs/deny.png"]')
         if current_url == url and len(denny_pic) == 0:
             self.driver.maximize_window()
-            time.sleep(2)
+            time.sleep(3)
             sel = '//a[@rel="%s"]' % period
             self.driver.find_element_by_xpath(sel).click()
             self.driver.find_element_by_id('trend-meanline').click()
@@ -102,9 +115,10 @@ class Bdindex_clawer:
             js = 'window.scrollTo(0,100);'
             self.driver.execute_script(js)
             time.sleep(1)
+            pag.moveTo(245, 1000, 0.5)
             pag.moveTo(245, 950, 0.5)
             pag.click()
-            time.sleep(1)
+            time.sleep(2)
             content_word = self.driver.find_element_by_id("trendBarVal")
             index_location = content_word.location
             index_size = content_word.size
@@ -155,9 +169,9 @@ class Bdindex_clawer:
 
     def process(self):
         city_name = [i for i in self.city_code.keys()]
-        res_list =[]
-        for ord, key_word in enumerate(city_name):
-            for city in city_name[ord+1:]:
+        res_list = []
+        for ord, key_word in enumerate(city_name[12:]):
+            for city in city_name:
                 time.sleep(3)
                 res_list.append(self.get_index('山东', city, key_word, 'all'))
         df = pd.DataFrame(res_list)
