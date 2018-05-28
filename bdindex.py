@@ -56,12 +56,12 @@ class Bdindex_clawer:
         name_element = self.driver.find_element_by_id("TANGRAM__PSP_3__userName")
         passport_element = self.driver.find_element_by_id("TANGRAM__PSP_3__password")
         submit_element = self.driver.find_element_by_id("TANGRAM__PSP_3__submit")
-        # name_element.send_keys('18702088767')
-        # passport_element.send_keys('18702088767')
+        name_element.send_keys('18702088767')
+        passport_element.send_keys('18702088767')
         # name_element.send_keys('18620807798')
         # passport_element.send_keys('denglifan1989')
-        name_element.send_keys('575548935@qq.com')
-        passport_element.send_keys('baidu@890529')
+        # name_element.send_keys('575548935@qq.com')
+        # passport_element.send_keys('baidu@890529')
         submit_element.click()
         verify_input = self.driver.find_elements_by_id("TANGRAM__PSP_3__verifyCode")
         if verify_input:
@@ -103,8 +103,29 @@ class Bdindex_clawer:
         if current_url == url and len(denny_pic) == 0:
             self.driver.maximize_window()
             time.sleep(3)
-            sel = '//a[@rel="%s"]' % period
-            self.driver.find_element_by_xpath(sel).click()
+            if str(period) in ['24h', '7', '30', '90', 'all']:
+                sel = '//a[@rel="%s"]' % period
+                self.driver.find_element_by_xpath(sel).click()
+            elif str(period) in ['2011', '2012', '2013', '2014', '2015', '2016', '2017']:
+                self.driver.find_element_by_xpath('//a[@rel="diy"]').click()
+                year_selects = self.driver.find_elements_by_class_name('yearA')
+                month_selects = self.driver.find_elements_by_class_name('monthA')
+                for i in range(2):
+                    year_selects[i].click()
+                    time.sleep(1)
+                    herf = './/a[@href="#%s"]' % period
+                    year_ele = year_selects[i].find_element_by_xpath(herf)
+                    print(year_ele)
+                    year_ele.click()
+                    month_selects[i].click()
+                    m_herf = './/a[@href="#%s"]' % ['01', '12'][i]
+                    mon_ele = month_selects[i].find_element_by_xpath(m_herf)
+                    time.sleep(1)
+                    mon_ele.click()
+                self.driver.find_element_by_xpath('//input[@value="确定"]').click()
+            else:
+                input('是否输入好日期：')
+            time.sleep(1)
             self.driver.find_element_by_id('trend-meanline').click()
             time.sleep(2)
             # rect = self.driver.find_element_by_xpath("//*[name()='svg']/*[name()='rect'][11]")
@@ -142,7 +163,7 @@ class Bdindex_clawer:
             y_rz = index_size['height'] * 3
             img_rz = img.resize((x_rz, y_rz), Image.ANTIALIAS)
             img_rz = img_rz.convert('RGB')
-            img_rz.save('pic/%s_%s_%s.jpg' % (key_word, city, period), quality=95)
+            img_rz.save('pic/%s_%s_%s.jpg' % (key_word, city, period), quality=100)
             index_dict = {}
             index_dict['keyword'] = key_word
             index_dict['city'] = city
@@ -167,15 +188,41 @@ class Bdindex_clawer:
 
 
 
+
     def process(self):
         city_name = [i for i in self.city_code.keys()]
         res_list = []
-        for ord, key_word in enumerate(city_name[12:]):
+        for ord, key_word in enumerate(city_name[9:]):
             for city in city_name:
                 time.sleep(3)
-                res_list.append(self.get_index('山东', city, key_word, 'all'))
+                res_list.append(self.get_index('山东', city, key_word, '2017'))
         df = pd.DataFrame(res_list)
         df.to_excel('result/shandong.xlsx')
+
+
+class Pic_to_str:
+    def __init__(self, folder_path):
+        self.folder_path = folder_path
+
+    def process(self):
+        res_list = []
+        for root, dirs, files in os.walk(self.folder_path):
+            for file in files:
+                print(file)
+                res_dict = {}
+                if 'jpg' in file:
+                    file_name = os.path.splitext(file)[0].split('_')
+                    # print(file_name)
+                    res_dict['key_word'], res_dict['city'], res_dict['period'] = file_name
+                    file_path = os.path.join(root, file)
+                    img = Image.open(file_path)
+                    res_dict['index'] = pytesseract.image_to_string(img)
+                    print(res_dict['index'])
+                res_list.append(res_dict)
+        df = pd.DataFrame(res_list)
+        df.to_excel(os.path.join(root, 'index.xlsx'))
+
+
 
 
 
@@ -190,3 +237,5 @@ class Bdindex_clawer:
 if __name__ == "__main__":
     bd_clawer = Bdindex_clawer()
     bd_clawer.process()
+    # pic_to_str = Pic_to_str('D:\program_lib\Baiduindex\pic\山东省')
+    # pic_to_str.process()
